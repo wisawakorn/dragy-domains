@@ -62,17 +62,23 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem("dragy_marketplace", JSON.stringify(marketplaceItems));
   }, [marketplaceItems]);
-// ดักจับชื่อ .dragy จาก URL ด้านบนอัตโนมัติ
+// แก้ไขบล็อกดักจับชื่อ .dragy อัตโนมัติให้แมตช์กับตัวแปรจริงของคุณ
   useEffect(() => {
-    const pathName = window.location.pathname; // ดึงค่า เช่น "/siam.dragy"
+    const pathName = window.location.pathname;
     if (pathName && pathName.endsWith('.dragy')) {
-      const currentDomain = pathName.substring(1); // ตัด / ออก เหลือ "siam.dragy"
+      const currentDomain = pathName.substring(1); // ได้ค่า "ชื่อโดเมน.dragy"
       
-      // ส่งชื่อโดเมนนี้เข้าไปที่ฟังก์ชันค้นหา/เช็กโดเมนหลักของคุณ
-      // ดูกล่องค้นหาเดิมของคุณว่าใช้ฟังก์ชันชื่ออะไร (เช่น setDomain, handleSearch, หรือ evaluateDomain)
-      // สมมุติว่าฟังก์ชันของคุณชื่อ handleSearch ให้ใส่แบบนี้ครับ:
-      if (typeof handleSearch === 'function') {
-        handleSearch(currentDomain);
+      // 1. สั่งเอาชื่อโดเมนนี้ยัดใส่กล่องพิมพ์ข้อความบนหน้าเว็บอัตโนมัติ
+      if (typeof setDomain === 'function') {
+        setDomain(currentDomain);
+      }
+      
+      // 2. สั่งรันฟังก์ชันยิง API หลังบ้านทันทีโดยไม่ต้องรอให้คนกดปุ่ม
+      // ให้ลองเช็กดูในไฟล์ App.tsx ของคุณว่าปุ่มกดเดิมใช้ฟังก์ชันไหนระหว่างสองตัวนี้:
+      if (typeof evaluateDomain === 'function') {
+        evaluateDomain(currentDomain);
+      } else if (typeof checkDomain === 'function') {
+        checkDomain(currentDomain);
       }
     }
   }, []);

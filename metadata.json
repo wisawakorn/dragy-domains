@@ -1,0 +1,6 @@
+{
+  "name": "Dragy Domains",
+  "description": "An AI-powered domain name platform featuring the custom .dragy extension. Generate creative web names, manage simulated DNS records, and explore the domain marketplace.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -62,7 +62,20 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem("dragy_marketplace", JSON.stringify(marketplaceItems));
   }, [marketplaceItems]);
-
+// ดักจับชื่อ .dragy จาก URL ด้านบนอัตโนมัติ
+  useEffect(() => {
+    const pathName = window.location.pathname; // ดึงค่า เช่น "/siam.dragy"
+    if (pathName && pathName.endsWith('.dragy')) {
+      const currentDomain = pathName.substring(1); // ตัด / ออก เหลือ "siam.dragy"
+      
+      // ส่งชื่อโดเมนนี้เข้าไปที่ฟังก์ชันค้นหา/เช็กโดเมนหลักของคุณ
+      // ดูกล่องค้นหาเดิมของคุณว่าใช้ฟังก์ชันชื่ออะไร (เช่น setDomain, handleSearch, หรือ evaluateDomain)
+      // สมมุติว่าฟังก์ชันของคุณชื่อ handleSearch ให้ใส่แบบนี้ครับ:
+      if (typeof handleSearch === 'function') {
+        handleSearch(currentDomain);
+      }
+    }
+  }, []);
   // --- UI Navigation & Interaction ---
   const [activeTab, setActiveTab] = useState<"search" | "portfolio" | "sandbox" | "marketplace">("search");
   

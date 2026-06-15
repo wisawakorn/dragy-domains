@@ -234,19 +234,22 @@ Respond ONLY with a JSON array where each item is an object with exactly these f
       appType: "spa",
     });
     app.use(vite.middlewares);
-  } else {
+ } else {
     // Production static file server config
     const distPath = path.join(process.cwd(), "dist");
     console.log(`Setting up static assets route from ${distPath}`);
+    
     app.use(express.static(distPath));
+
+    // บรรทัดแก้ไขใหม่: ดักจับ URL ทุกอันที่ลงท้ายด้วย .dragy
+    app.get("/:domainName.dragy", (req, res) => {
+      // ส่งไฟล์หน้าเว็บหลัก index.html ไปรองรับระบบแปลงค่า
+      res.sendFile(path.join(distPath, "index.html"));
+    });
+
+    // สำหรับหน้าแรกสุด หรือหน้าทั่วไปอื่นๆ
     app.get("*", (req, res) => {
       res.sendFile(path.join(distPath, "index.html"));
     });
   }
-
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Express custom server running at http://localhost:${PORT}`);
-  });
-}
-
 startServer();

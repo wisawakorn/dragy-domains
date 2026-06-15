@@ -17,7 +17,10 @@ import {
   TrendingUp, 
   ArrowRight,
   Shield,
+<<<<<<< HEAD
   Lock,
+=======
+>>>>>>> b69daee977005acd679ee8c9c66f62781c7ed7af
   Tag, 
   Activity, 
   Compass, 
@@ -28,7 +31,10 @@ import {
   ExternalLink,
   Loader2,
   RefreshCw,
+<<<<<<< HEAD
   Database,
+=======
+>>>>>>> b69daee977005acd679ee8c9c66f62781c7ed7af
   AlertCircle
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
@@ -39,7 +45,11 @@ export default function App() {
   // --- Persistent State Hooks ---
   const [wallet, setWallet] = useState<number>(() => {
     const saved = localStorage.getItem("dragy_wallet");
+<<<<<<< HEAD
     return saved ? parseInt(saved) : 15000;
+=======
+    return saved ? parseInt(saved) : 5000;
+>>>>>>> b69daee977005acd679ee8c9c66f62781c7ed7af
   });
 
   const [ownedDomains, setOwnedDomains] = useState<DomainInfo[]>(() => {
@@ -52,6 +62,7 @@ export default function App() {
     return saved ? JSON.parse(saved) : INITIAL_PREMIUM_DOMAINS;
   });
 
+<<<<<<< HEAD
   // --- MongoDB Admin & Management States ---
   const [dbURIInput, setDbURIInput] = useState("");
   const [dbStats, setDbStats] = useState<{
@@ -153,6 +164,8 @@ export default function App() {
     }
   };
 
+=======
+>>>>>>> b69daee977005acd679ee8c9c66f62781c7ed7af
   // Save states to local storage
   useEffect(() => {
     localStorage.setItem("dragy_wallet", wallet.toString());
@@ -165,9 +178,34 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem("dragy_marketplace", JSON.stringify(marketplaceItems));
   }, [marketplaceItems]);
+<<<<<<< HEAD
 
   // --- UI Navigation & Interaction ---
   const [activeTab, setActiveTab] = useState<"search" | "portfolio" | "sandbox" | "marketplace" | "mongodb">("search");
+=======
+// แก้ไขบล็อกดักจับชื่อ .dragy อัตโนมัติให้แมตช์กับตัวแปรจริงของคุณ
+  useEffect(() => {
+    const pathName = window.location.pathname;
+    if (pathName && pathName.endsWith('.dragy')) {
+      const currentDomain = pathName.substring(1); // ได้ค่า "ชื่อโดเมน.dragy"
+      
+      // 1. สั่งเอาชื่อโดเมนนี้ยัดใส่กล่องพิมพ์ข้อความบนหน้าเว็บอัตโนมัติ
+      if (typeof setDomain === 'function') {
+        setDomain(currentDomain);
+      }
+      
+      // 2. สั่งรันฟังก์ชันยิง API หลังบ้านทันทีโดยไม่ต้องรอให้คนกดปุ่ม
+      // ให้ลองเช็กดูในไฟล์ App.tsx ของคุณว่าปุ่มกดเดิมใช้ฟังก์ชันไหนระหว่างสองตัวนี้:
+      if (typeof evaluateDomain === 'function') {
+        evaluateDomain(currentDomain);
+      } else if (typeof checkDomain === 'function') {
+        checkDomain(currentDomain);
+      }
+    }
+  }, []);
+  // --- UI Navigation & Interaction ---
+  const [activeTab, setActiveTab] = useState<"search" | "portfolio" | "sandbox" | "marketplace">("search");
+>>>>>>> b69daee977005acd679ee8c9c66f62781c7ed7af
   
   // Search state
   const [searchQuery, setSearchQuery] = useState("");
@@ -188,8 +226,11 @@ export default function App() {
 
   // Marketplace listing input
   const [sellPriceInput, setSellPriceInput] = useState<string>("");
+<<<<<<< HEAD
   const [sellType, setSellType] = useState<"instant" | "auction">("instant");
   const [bidAmountInput, setBidAmountInput] = useState<{ [domain: string]: string }>({});
+=======
+>>>>>>> b69daee977005acd679ee8c9c66f62781c7ed7af
 
   // AI Evaluation section states
   const [isEvaluating, setIsEvaluating] = useState(false);
@@ -212,6 +253,7 @@ export default function App() {
     }, 4500);
   };
 
+<<<<<<< HEAD
   // --- Profile session, Authentication & AI Co-pilot states ---
   const [currentUser, setCurrentUser] = useState<{
     email: string;
@@ -325,6 +367,12 @@ export default function App() {
       setWallet(prev => prev + 1000);
       showToast("Received 1,000 $DRAGY Faucet tokens (local backup applied)!", "success");
     }
+=======
+  // Faucet request for simulated wallet
+  const handleFaucet = () => {
+    setWallet(prev => prev + 1000);
+    showToast("Received 1,000 $DRAGY Faucet utility tokens!", "success");
+>>>>>>> b69daee977005acd679ee8c9c66f62781c7ed7af
   };
 
   // Handle live lookup state whenever search changes
@@ -381,14 +429,19 @@ export default function App() {
   }, [searchQuery, ownedDomains, marketplaceItems]);
 
   // Handle Domain registration (instant claim)
+<<<<<<< HEAD
   const handleRegisterDomain = async (domainName: string, price: number, isPremium: boolean) => {
     if (!verifyWritePermission("register new .dragy domains")) return;
     const email = currentUser?.email || "PRABUABAN444@gmail.com";
+=======
+  const handleRegisterDomain = (domainName: string, price: number, isPremium: boolean) => {
+>>>>>>> b69daee977005acd679ee8c9c66f62781c7ed7af
     if (wallet < price) {
       showToast("Insufficient Balance. Recharge with the faucet button in the header!", "error");
       return;
     }
 
+<<<<<<< HEAD
     try {
       const records = [{ id: "dns-auto-a", type: "A", name: "@", value: "76.76.21.21", ttl: 3600 }];
       const aiMetrics = activeAiMetrics || {
@@ -442,6 +495,28 @@ export default function App() {
       showToast(`Successfully registered ${domainName} (Local offline backup)!`, "success");
       setSearchQuery(domainName);
     }
+=======
+    // Deduct walllet
+    setWallet(prev => prev - price);
+
+    const newDomain: DomainInfo = {
+      domain: domainName,
+      owner: "You",
+      price: price,
+      isPremium: isPremium,
+      registeredDate: new Date().toISOString().split("T")[0],
+      isForSale: false,
+      dnsRecords: [
+        { id: "def-a", type: "A", name: "@", value: "76.76.21.21", ttl: 3600 }
+      ]
+    };
+
+    setOwnedDomains(prev => [newDomain, ...prev]);
+    showToast(`Successfully registered ${domainName}!`, "success");
+    
+    // Refresh search results
+    setSearchQuery(domainName);
+>>>>>>> b69daee977005acd679ee8c9c66f62781c7ed7af
   };
 
   // Run AI Evaluation via server endpoint
@@ -512,7 +587,10 @@ export default function App() {
   // DNS Managing Actions
   const handleAddDnsRecord = (e: React.FormEvent, domainName: string) => {
     e.preventDefault();
+<<<<<<< HEAD
     if (!verifyWritePermission("add DNS records")) return;
+=======
+>>>>>>> b69daee977005acd679ee8c9c66f62781c7ed7af
     if (!newDnsValue.trim()) return;
 
     const newRecord: DnsRecord = {
@@ -539,7 +617,10 @@ export default function App() {
   };
 
   const handleDeleteDnsRecord = (domainName: string, recordId: string) => {
+<<<<<<< HEAD
     if (!verifyWritePermission("delete DNS records")) return;
+=======
+>>>>>>> b69daee977005acd679ee8c9c66f62781c7ed7af
     setOwnedDomains(prev => prev.map(d => {
       if (d.domain === domainName) {
         return {
@@ -554,7 +635,10 @@ export default function App() {
 
   // Marketplace Actions
   const handleListItem = (domainName: string) => {
+<<<<<<< HEAD
     if (!verifyWritePermission("list domains in the marketplace")) return;
+=======
+>>>>>>> b69daee977005acd679ee8c9c66f62781c7ed7af
     const listPrice = parseInt(sellPriceInput);
     if (isNaN(listPrice) || listPrice <= 0) {
       showToast("Please enter a valid price in $DRAGY.", "error");
@@ -564,7 +648,12 @@ export default function App() {
     const domainObject = ownedDomains.find(d => d.domain === domainName);
     if (!domainObject) return;
 
+<<<<<<< HEAD
     // Remove from portfolio owned list (or keep as owned but marked as listed)
+=======
+    // Remove from portfolio owned list (or we can keep it as ours but marked as item on sale)
+    // Let's mark it as listed for sale
+>>>>>>> b69daee977005acd679ee8c9c66f62781c7ed7af
     setOwnedDomains(prev => prev.map(d => {
       if (d.domain === domainName) {
         return { ...d, isForSale: true, price: listPrice };
@@ -576,12 +665,16 @@ export default function App() {
     const score = domainObject.aiMetrics?.score || 72; // default if not evaluated
     const valuation = domainObject.aiMetrics?.valuation || listPrice;
 
+<<<<<<< HEAD
     const isAuctionMode = sellType === "auction";
+=======
+>>>>>>> b69daee977005acd679ee8c9c66f62781c7ed7af
     const item: MarketItem = {
       domain: domainName,
       price: listPrice,
       seller: "You",
       valuation: valuation,
+<<<<<<< HEAD
       score: score,
       isAuction: isAuctionMode,
       highestBid: isAuctionMode ? listPrice : undefined,
@@ -749,6 +842,17 @@ export default function App() {
 
   const handleCancelListing = (domainName: string) => {
     if (!verifyWritePermission("cancel marketplace listings")) return;
+=======
+      score: score
+    };
+
+    setMarketplaceItems(prev => [item, ...prev]);
+    showToast(`Listed ${domainName} on the marketplace for ${listPrice} $DRAGY!`, "success");
+    setSellPriceInput("");
+  };
+
+  const handleCancelListing = (domainName: string) => {
+>>>>>>> b69daee977005acd679ee8c9c66f62781c7ed7af
     setOwnedDomains(prev => prev.map(d => {
       if (d.domain === domainName) {
         return { ...d, isForSale: false };
@@ -761,7 +865,10 @@ export default function App() {
   };
 
   const handleBuyMarketItem = (item: MarketItem) => {
+<<<<<<< HEAD
     if (!verifyWritePermission("buy domains from the marketplace")) return;
+=======
+>>>>>>> b69daee977005acd679ee8c9c66f62781c7ed7af
     if (wallet < item.price) {
       showToast("Insufficient Balance. Claim free tokens from the Faucet first!", "error");
       return;
@@ -813,6 +920,7 @@ export default function App() {
     setActiveTab("sandbox");
   };
 
+<<<<<<< HEAD
   // Automated AI Agent execution logic
   const handleAiCommandSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -1003,6 +1111,8 @@ export default function App() {
     }
   };
 
+=======
+>>>>>>> b69daee977005acd679ee8c9c66f62781c7ed7af
   return (
     <div className="min-h-screen bg-[#0c0e12] text-slate-100 flex flex-col font-sans selection:bg-purple-500/30 selection:text-white">
       
@@ -1070,6 +1180,7 @@ export default function App() {
               <Tag className="h-3.5 w-3.5" />
               Market
             </button>
+<<<<<<< HEAD
             <button
               onClick={() => { setActiveTab("mongodb"); setSelectedManageDomain(null); }}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold tracking-wider uppercase transition-all duration-200 ${
@@ -1084,6 +1195,11 @@ export default function App() {
           </nav>
 
           {/* Wallet Balance Controls & Profile */}
+=======
+          </nav>
+
+          {/* Wallet Balance Controls */}
+>>>>>>> b69daee977005acd679ee8c9c66f62781c7ed7af
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2 bg-gradient-to-r from-slate-950 to-slate-900 border border-slate-800 px-3 py-1.5 rounded-xl">
               <Coins className="h-4 w-4 text-amber-500 animate-pulse" />
@@ -1097,11 +1213,16 @@ export default function App() {
             <button
               onClick={handleFaucet}
               title="Request 1,000 Free Play Tokens"
+<<<<<<< HEAD
               className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-amber-400 hover:text-amber-300 border border-slate-700 rounded-xl text-xs font-bold font-mono transition-all duration-200 flex items-center gap-1 cursor-pointer"
+=======
+              className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-amber-400 hover:text-amber-300 border border-slate-700 rounded-xl text-xs font-bold font-mono transition-all duration-200 flex items-center gap-1"
+>>>>>>> b69daee977005acd679ee8c9c66f62781c7ed7af
             >
               <Plus className="h-3.5 w-3.5" />
               Faucet
             </button>
+<<<<<<< HEAD
 
             {/* User Login/Profile Module */}
             {currentUser ? (
@@ -1125,6 +1246,8 @@ export default function App() {
                 Sign In / Login
               </button>
             )}
+=======
+>>>>>>> b69daee977005acd679ee8c9c66f62781c7ed7af
           </div>
 
         </div>
@@ -1133,6 +1256,7 @@ export default function App() {
       {/* Main Content Viewport */}
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
         
+<<<<<<< HEAD
         {/* Security Ownership Alert Banner */}
         {(!currentUser || currentUser.email !== "PRABUABAN444@gmail.com") ? (
           <div className="mb-6 bg-amber-950/20 rounded-2xl p-4 border border-amber-500/30 flex items-start gap-3">
@@ -1163,6 +1287,18 @@ export default function App() {
             </div>
           </div>
         )}
+=======
+        {/* Dynamic Warning of Sandbox play limits */}
+        <div className="mb-6 bg-slate-900/40 rounded-2xl p-4 border border-indigo-500/15 flex items-start gap-3">
+          <Shield className="h-5 w-5 text-indigo-400 shrink-0 mt-0.5" />
+          <div className="text-xs text-slate-300">
+            <span className="font-bold text-white uppercase font-mono tracking-wide">Dragy Registry Note: </span>
+            This workspace utilizes a high-performance offline simulation and custom server engine. You are provided with standard play 
+            credits (<span className="text-amber-400">$DRAGY</span>) to register custom domain extensions. Any domain bought or set up 
+            can be integrated instantly with the custom DNS parameters interface inside your manager.
+          </div>
+        </div>
+>>>>>>> b69daee977005acd679ee8c9c66f62781c7ed7af
 
         {/* --- EXPLORE TAB: Lookups, Evaluations and Registries --- */}
         {activeTab === "search" && (
@@ -1569,6 +1705,7 @@ export default function App() {
                                     Cancel Sale
                                   </button>
                                 ) : (
+<<<<<<< HEAD
                                   <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2 bg-slate-900 border border-slate-800 p-2 rounded-2xl">
                                     <div className="flex items-center gap-1.5 bg-slate-950 p-1 rounded-xl">
                                       <button
@@ -1606,6 +1743,21 @@ export default function App() {
                                       className="px-4 py-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl text-xs font-black transition-all shrink-0"
                                     >
                                       {sellType === "auction" ? "Start Auction" : "List Asset"}
+=======
+                                  <div className="flex items-center gap-1.5 bg-slate-900 p-1 rounded-xl border border-slate-800">
+                                    <input
+                                      type="number"
+                                      placeholder="Sell Price ($DRAGY)"
+                                      value={sellPriceInput}
+                                      onChange={(e) => setSellPriceInput(e.target.value)}
+                                      className="bg-slate-950 text-xs px-2.5 py-1 text-slate-200 outline-none w-28 rounded-lg font-mono"
+                                    />
+                                    <button
+                                      onClick={() => handleListItem(targetDomain.domain)}
+                                      className="px-3 py-1 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-xs font-bold transition-all"
+                                    >
+                                      Sell Asset
+>>>>>>> b69daee977005acd679ee8c9c66f62781c7ed7af
                                     </button>
                                   </div>
                                 )}
@@ -1969,6 +2121,7 @@ export default function App() {
               </span>
             </div>
 
+<<<<<<< HEAD
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {marketplaceItems.map((item) => (
                 <div
@@ -1984,10 +2137,24 @@ export default function App() {
                           : "bg-purple-500/10 text-purple-400 border-purple-500/20"
                       }`}>
                         {item.isAuction ? "🔴 Live Auction" : "🟢 Instant Sale"}
+=======
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {marketplaceItems.map((item) => (
+                <div
+                  key={item.domain}
+                  className="bg-slate-950 border border-slate-900 rounded-2xl p-5 hover:border-slate-800 transition-all text-left flex flex-col justify-between space-y-4"
+                >
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-base font-bold font-mono text-white tracking-tight">{item.domain}</span>
+                      <span className="text-[10px] bg-purple-500/10 text-purple-400 border border-purple-500/20 px-1.5 py-0.5 rounded font-bold">
+                        Score {item.score}
+>>>>>>> b69daee977005acd679ee8c9c66f62781c7ed7af
                       </span>
                     </div>
 
                     <div className="text-[11px] text-slate-500 flex items-center justify-between pt-1">
+<<<<<<< HEAD
                       <span>Broker: <strong className={item.seller === "You" ? "text-purple-400" : "text-slate-300"}>{item.seller === "You" ? "You (Owner)" : item.seller}</strong></span>
                       <span>USD Appraisal: <strong className="text-emerald-400 font-bold">${item.valuation.toLocaleString()}</strong></span>
                     </div>
@@ -2102,6 +2269,40 @@ export default function App() {
                           </button>
                         )}
                       </div>
+=======
+                      <span>Broker: {item.seller}</span>
+                      <span>Worth: <strong className="text-emerald-400 font-bold">${item.valuation.toLocaleString()}</strong></span>
+                    </div>
+
+                    <div className="bg-slate-900/45 p-2 rounded-xl text-[11px] font-mono border border-slate-900/60 mt-2">
+                      <p className="text-slate-500 text-[10px] leading-none uppercase tracking-wide font-bold">Market Price</p>
+                      <span className="text-base font-extrabold text-amber-400 block pt-1">{item.price.toLocaleString()} $DRAGY</span>
+                    </div>
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-900 flex items-center justify-between gap-2">
+                    <button
+                      onClick={() => handleQuickSearchTemplate(item.domain)}
+                      className="text-[11px] text-slate-400 hover:text-slate-300 font-bold flex items-center gap-1 cursor-pointer"
+                    >
+                      <span>Inquire AI appraisal</span>
+                    </button>
+
+                    {item.seller === "You" ? (
+                      <button
+                        onClick={() => handleCancelListing(item.domain)}
+                        className="px-2.5 py-1.5 bg-rose-950/20 hover:bg-rose-950/30 text-rose-300 border border-rose-500/20 rounded-xl text-xs font-bold transition-all uppercase cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleBuyMarketItem(item)}
+                        className="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-xs font-bold transition-all uppercase tracking-wide flex items-center gap-1 cursor-pointer"
+                      >
+                        <Coins className="h-3.5 w-3.5" /> Buy
+                      </button>
+>>>>>>> b69daee977005acd679ee8c9c66f62781c7ed7af
                     )}
                   </div>
 
@@ -2112,6 +2313,7 @@ export default function App() {
           </div>
         )}
 
+<<<<<<< HEAD
         {activeTab === "mongodb" && (
           <div className="space-y-8 animate-fadeIn max-w-7xl mx-auto px-4 sm:px-6">
             
@@ -2542,6 +2744,8 @@ export default function App() {
           </div>
         )}
 
+=======
+>>>>>>> b69daee977005acd679ee8c9c66f62781c7ed7af
       </main>
 
       {/* Confetti or Alert toast message absolute notifications */}
@@ -2577,7 +2781,11 @@ export default function App() {
       {/* Styled Footer */}
       <footer className="border-t border-slate-900 bg-slate-950/40 p-6 text-center text-xs text-slate-500">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+<<<<<<< HEAD
           <p>© 2026 ku.Dragy. ลิขสิทธิ์ถูกต้องตามกฎหมาย ดูแลระบบโดย PRABUABAN / Powered by Gemini Core</p>
+=======
+          <p>© 2026 Dragy Space Inc. Powered by Gemini Core generative intelligence.</p>
+>>>>>>> b69daee977005acd679ee8c9c66f62781c7ed7af
           <div className="flex gap-4">
             <a href="#" className="hover:text-slate-400">DNS Manual</a>
             <a href="#" className="hover:text-slate-400">API Access</a>
@@ -2586,6 +2794,7 @@ export default function App() {
         </div>
       </footer>
 
+<<<<<<< HEAD
       {/* ========================================================= */}
       {/* 🔐 AUTHENTICATION & LOGIN MANAGEMENT DIALOG (MODAL) */}
       {/* ========================================================= */}
@@ -3035,6 +3244,8 @@ export default function App() {
         )}
       </AnimatePresence>
 
+=======
+>>>>>>> b69daee977005acd679ee8c9c66f62781c7ed7af
     </div>
   );
 }

@@ -3,8 +3,11 @@ import path from "path";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, Type } from "@google/genai";
 import dotenv from "dotenv";
+<<<<<<< HEAD
 import fs from "fs";
 import { MongoClient } from "mongodb";
+=======
+>>>>>>> b69daee977005acd679ee8c9c66f62781c7ed7af
 
 dotenv.config();
 
@@ -14,6 +17,7 @@ async function startServer() {
 
   app.use(express.json());
 
+<<<<<<< HEAD
   // =========================================================
   // 🗄️ MONGODB CORE ENGINE & SYSTEM QUERY LOGGER
   // =========================================================
@@ -716,6 +720,8 @@ async function startServer() {
     }
   });
 
+=======
+>>>>>>> b69daee977005acd679ee8c9c66f62781c7ed7af
   // Safe initialize helper for Gemini SDK
   const getAI = () => {
     const apiKey = process.env.GEMINI_API_KEY;
@@ -930,6 +936,7 @@ Respond ONLY with a JSON array where each item is an object with exactly these f
     }
   });
 
+<<<<<<< HEAD
   // API Route: AI Assistant Command Center (Automates state changes based on user prompts)
   app.post("/api/ai/command", async (req, res) => {
     try {
@@ -1145,12 +1152,21 @@ If no action fits, return "actions": []. Raise clear instructions.`;
       next();
     });
 
+=======
+  // Setup Vite Middleware in development
+  if (process.env.NODE_ENV !== "production") {
+    console.log("Setting up Vite middleware for development.");
+>>>>>>> b69daee977005acd679ee8c9c66f62781c7ed7af
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",
     });
     app.use(vite.middlewares);
+<<<<<<< HEAD
   } else {
+=======
+ } else {
+>>>>>>> b69daee977005acd679ee8c9c66f62781c7ed7af
     // Production static file server config
     const distPath = path.join(process.cwd(), "dist");
     console.log(`Setting up static assets route from ${distPath}`);
@@ -1168,10 +1184,13 @@ If no action fits, return "actions": []. Raise clear instructions.`;
       res.sendFile(path.join(distPath, "index.html"));
     });
   }
+<<<<<<< HEAD
 
   app.listen(PORT, "0.0.0.0", () => {
     console.log(`Express custom server running at http://localhost:${PORT}`);
   });
 }
 
+=======
+>>>>>>> b69daee977005acd679ee8c9c66f62781c7ed7af
 startServer();

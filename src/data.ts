@@ -3,6 +3,7 @@ import { DomainInfo, MarketItem } from "./types";
 export const INITIAL_PREMIUM_DOMAINS: MarketItem[] = [
   {
     domain: "ai.dragy",
+<<<<<<< HEAD
     price: 3500,
     seller: "Dragy Holdings LLC",
     valuation: 4500,
@@ -27,6 +28,19 @@ export const INITIAL_PREMIUM_DOMAINS: MarketItem[] = [
     bids: [
       { id: "b3", bidder: "DeFiNerd", amount: 1400, time: "2026-06-14 15:00" }
     ]
+=======
+    price: 3200,
+    seller: "Dragy Holdings LLC",
+    valuation: 4500,
+    score: 98,
+  },
+  {
+    domain: "crypto.dragy",
+    price: 1800,
+    seller: "Alpha Ventures",
+    valuation: 2200,
+    score: 94,
+>>>>>>> b69daee977005acd679ee8c9c66f62781c7ed7af
   },
   {
     domain: "pay.dragy",
@@ -34,7 +48,10 @@ export const INITIAL_PREMIUM_DOMAINS: MarketItem[] = [
     seller: "Satoshi G",
     valuation: 1900,
     score: 92,
+<<<<<<< HEAD
     isAuction: false
+=======
+>>>>>>> b69daee977005acd679ee8c9c66f62781c7ed7af
   },
   {
     domain: "cloud.dragy",
@@ -42,7 +59,10 @@ export const INITIAL_PREMIUM_DOMAINS: MarketItem[] = [
     seller: "SaaS Brokers",
     valuation: 1100,
     score: 88,
+<<<<<<< HEAD
     isAuction: false
+=======
+>>>>>>> b69daee977005acd679ee8c9c66f62781c7ed7af
   },
   {
     domain: "meta.dragy",
@@ -50,6 +70,7 @@ export const INITIAL_PREMIUM_DOMAINS: MarketItem[] = [
     seller: "Zuck Fanboy",
     valuation: 1600,
     score: 90,
+<<<<<<< HEAD
     isAuction: false
   },
   {
@@ -64,6 +85,15 @@ export const INITIAL_PREMIUM_DOMAINS: MarketItem[] = [
     bids: [
       { id: "b4", bidder: "E-SportsChamp", amount: 750, time: "2026-06-14 11:15" }
     ]
+=======
+  },
+  {
+    domain: "gaming.dragy",
+    price: 950,
+    seller: "Dragy Holdings LLC",
+    valuation: 1300,
+    score: 89,
+>>>>>>> b69daee977005acd679ee8c9c66f62781c7ed7af
   },
   {
     domain: "chef.dragy",
@@ -71,7 +101,10 @@ export const INITIAL_PREMIUM_DOMAINS: MarketItem[] = [
     seller: "Gourmet Group",
     valuation: 450,
     score: 78,
+<<<<<<< HEAD
     isAuction: false
+=======
+>>>>>>> b69daee977005acd679ee8c9c66f62781c7ed7af
   },
   {
     domain: "dev.dragy",
@@ -79,7 +112,10 @@ export const INITIAL_PREMIUM_DOMAINS: MarketItem[] = [
     seller: "Standard Labs",
     valuation: 1400,
     score: 91,
+<<<<<<< HEAD
     isAuction: false
+=======
+>>>>>>> b69daee977005acd679ee8c9c66f62781c7ed7af
   }
 ];
 

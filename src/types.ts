@@ -34,6 +34,7 @@ export interface SuggestedDomain {
   audience: string;
 }
 
+<<<<<<< HEAD
 export interface Bid {
   id: string;
   bidder: string;
@@ -41,12 +42,15 @@ export interface Bid {
   time: string;
 }
 
+=======
+>>>>>>> b69daee977005acd679ee8c9c66f62781c7ed7af
 export interface MarketItem {
   domain: string;
   price: number;
   seller: string;
   valuation: number;
   score: number;
+<<<<<<< HEAD
   isAuction?: boolean;
   highestBid?: number;
   bids?: Bid[];
@@ -54,3 +58,6 @@ export interface MarketItem {
   minIncrement?: number;
 }
 
+=======
+}
+>>>>>>> b69daee977005acd679ee8c9c66f62781c7ed7af

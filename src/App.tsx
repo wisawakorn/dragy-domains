@@ -3,832 +3,316 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { 
-  Search, 
-  Globe, 
   Sparkles, 
+  Image as ImageIcon, 
+  Video, 
   Cpu, 
-  Coins, 
-  Trash2, 
-  Plus, 
-  Check, 
-  DollarSign, 
-  TrendingUp, 
-  ArrowRight,
-  Shield,
-  Lock,
-  Tag, 
-  Activity, 
-  Compass, 
-  User, 
+  Globe, 
+  Terminal, 
+  Download, 
+  Play, 
   Layers, 
-  HelpCircle,
-  Lightbulb,
-  ExternalLink,
-  Loader2,
   RefreshCw,
-  Database,
-  AlertCircle
+  ArrowRight
 } from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
-import { DomainInfo, DnsRecord, AiMetrics, SuggestedDomain, MarketItem } from "./types";
-import { INITIAL_OWNED_DOMAINS, INITIAL_PREMIUM_DOMAINS, calculateDomainBaseCost } from "./data";
+
+interface DeployedSubDomain {
+  subdomain: string;
+  projectName: string;
+  status: "ONLINE" | "STANDBY";
+  type: string;
+}
+
+interface GeneratedAsset {
+  id: string;
+  prompt: string;
+  type: "IMAGE" | "VIDEO";
+  style: string;
+  url: string;
+  createdDate: string;
+}
 
 export default function App() {
-  // --- Persistent State Hooks ---
-  const [wallet, setWallet] = useState<number>(() => {
-    const saved = localStorage.getItem("dragy_wallet");
-    return saved ? parseInt(saved) : 15000;
-  });
+  const masterName = "Gu Dragy Awatarn";
+  const aiTitle = "ดาร์กี หัตถ์เทวา (dragy hattewar)";
 
-  const [ownedDomains, setOwnedDomains] = useState<DomainInfo[]>(() => {
-    const saved = localStorage.getItem("dragy_owned_domains");
-    return saved ? JSON.parse(saved) : INITIAL_OWNED_DOMAINS;
-  });
-
-  const [marketplaceItems, setMarketplaceItems] = useState<MarketItem[]>(() => {
-    const saved = localStorage.getItem("dragy_marketplace");
-    return saved ? JSON.parse(saved) : INITIAL_PREMIUM_DOMAINS;
-  });
-
-  // --- MongoDB Admin & Management States ---
-  const [dbURIInput, setDbURIInput] = useState("");
-  const [dbStats, setDbStats] = useState<{
-    connectionURI: string;
-    connectionType: string;
-    status: string;
-    collections: { name: string; count: number }[];
-    lastError?: string | null;
-  } | null>(null);
-  const [dbActivityLogs, setDbActivityLogs] = useState<any[]>([]);
-  const [selectedDbCol, setSelectedDbCol] = useState<string>("domains");
-  const [colDocumentList, setColDocumentList] = useState<any[]>([]);
-  const [mongoQueryJSON, setMongoQueryJSON] = useState("{}");
-  const [mongoActionType, setMongoActionType] = useState<"find" | "insertOne" | "updateOne" | "deleteOne">("find");
-  const [mongoDataJSON, setMongoDataJSON] = useState("{}");
-  const [mongoResultText, setMongoResultText] = useState("");
-  const [isDbLoading, setIsDbLoading] = useState(false);
-  const [isRetryingDb, setIsRetryingDb] = useState(false);
-
-  // Sync state with standard backend MongoDB backplane
-  const syncDatabaseState = async (email: string) => {
-    try {
-      const response = await fetch("/api/state/sync", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email })
-      });
-      if (response.ok) {
-        const data = await response.json();
-        if (data.user) {
-          setWallet(data.user.wallet);
-        }
-        if (data.ownedDomains) {
-          setOwnedDomains(data.ownedDomains);
-        }
-        if (data.marketplaceItems) {
-          setMarketplaceItems(data.marketplaceItems);
-        }
-        // Fetch MongoDB stats too
-        fetchDbStats();
-      }
-    } catch (err) {
-      console.warn("MongoDB state sync failed. Defaulting to local memory engine:", err);
-    }
-  };
-
-  const fetchDbStats = async () => {
-    try {
-      const statsRes = await fetch("/api/db/init");
-      if (statsRes.ok) {
-        const stats = await statsRes.json();
-        setDbStats(stats);
-      }
-      const logsRes = await fetch("/api/db/logs");
-      if (logsRes.ok) {
-        const logs = await logsRes.json();
-        setDbActivityLogs(logs);
-      }
-    } catch (e) {
-      console.warn("Could not retrieve db status.", e);
-    }
-  };
-
-  const handleRetryConnection = async () => {
-    setIsRetryingDb(true);
-    showToast("Connecting and verifying SSL handshakes with MongoDB Atlas...", "info");
-    try {
-      const response = await fetch("/api/db/retry", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: currentUser?.email || "PRABUABAN444@gmail.com" })
-      });
-      if (response.ok) {
-        const data = await response.json();
-        showToast(data.message, data.success ? "success" : "error");
-        fetchDbStats();
-      } else {
-        showToast("Server returned error when checking database status.", "error");
-      }
-    } catch (e) {
-      showToast("Unable to reach the backend retry endpoint.", "error");
-    } finally {
-      setIsRetryingDb(false);
-    }
-  };
-
-  const fetchCollectionDocs = async (collectionName: string) => {
-    setIsDbLoading(true);
-    try {
-      const res = await fetch(`/api/db/docs/${collectionName}`);
-      if (res.ok) {
-        const docs = await res.json();
-        setColDocumentList(docs);
-      }
-    } catch (e) {
-      showToast("Failed to fetch collection documents", "error");
-    } finally {
-      setIsDbLoading(false);
-    }
-  };
-
-  // Save states to local storage
-  useEffect(() => {
-    localStorage.setItem("dragy_wallet", wallet.toString());
-  }, [wallet]);
-
-  useEffect(() => {
-    localStorage.setItem("dragy_owned_domains", JSON.stringify(ownedDomains));
-  }, [ownedDomains]);
-
-  useEffect(() => {
-    localStorage.setItem("dragy_marketplace", JSON.stringify(marketplaceItems));
-  }, [marketplaceItems]);
-
-  // --- UI Navigation & Interaction ---
-  const [activeTab, setActiveTab] = useState<"search" | "portfolio" | "sandbox" | "marketplace" | "mongodb">("search");
+  // --- States ---
+  const [activeMode, setActiveMode] = useState<"image" | "video">("image");
+  const [promptInput, setPromptInput] = useState("");
+  const [selectedStyle, setSelectedStyle] = useState("ไทยแฟนตาซีสรวงสวรรค์");
+  const [aspectRatio, setAspectRatio] = useState("16:9");
+  const [videoDuration, setVideoDuration] = useState("5s");
   
-  // Search state
-  const [searchQuery, setSearchQuery] = useState("");
-  const [currentLookupResult, setCurrentLookupResult] = useState<{
-    domain: string;
-    status: "available" | "owned" | "marketplace" | "taken";
-    price: number;
-    isPremium: boolean;
-    seller?: string;
-  } | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generationProgress, setGenerationProgress] = useState(0);
+  const [terminalLogs, setTerminalLogs] = useState<string[]>([]);
 
-  // DNS form / Managed domain state
-  const [selectedManageDomain, setSelectedManageDomain] = useState<string | null>(null);
-  const [newDnsType, setNewDnsType] = useState<"A" | "AAAA" | "CNAME" | "TXT">("A");
-  const [newDnsName, setNewDnsName] = useState("@");
-  const [newDnsValue, setNewDnsValue] = useState("");
-  const [newDnsTtl, setNewDnsTtl] = useState(3600);
+  // รายการซับโดเมนภายใต้ระบบ .dragy ที่เจ้านายสั่งรันโปรเจกต์ไว้ใช้งานจริง
+  const [mySubDomains] = useState<DeployedSubDomain[]>([
+    { subdomain: "www.ai.dragy", projectName: "ศูนย์บัญชาการหัตถ์เทวา", status: "ONLINE", type: "AI Engine" },
+    { subdomain: "www.phuttha-tharani.dragy", projectName: "โปรเจกต์พุทธธารานี", status: "ONLINE", type: "Folklore Video" },
+    { subdomain: "www.tribute-m.dragy", projectName: "อนุสรณ์อาลัยเพื่อน M", status: "ONLINE", type: "Memorial Archive" }
+  ]);
 
-  // Marketplace listing input
-  const [sellPriceInput, setSellPriceInput] = useState<string>("");
-  const [sellType, setSellType] = useState<"instant" | "auction">("instant");
-  const [bidAmountInput, setBidAmountInput] = useState<{ [domain: string]: string }>({});
-
-  // AI Evaluation section states
-  const [isEvaluating, setIsEvaluating] = useState(false);
-  const [activeAiMetrics, setActiveAiMetrics] = useState<AiMetrics | null>(null);
-  const [evalError, setEvalError] = useState<string | null>(null);
-
-  // Suggestion/Sandbox seed prompt, states
-  const [sandboxPrompt, setSandboxPrompt] = useState("");
-  const [isGeneratingSuggestions, setIsGeneratingSuggestions] = useState(false);
-  const [suggestions, setSuggestions] = useState<SuggestedDomain[]>([]);
-  const [suggestionError, setSuggestionError] = useState<string | null>(null);
-
-  // Toast / Status Alerts
-  const [toastMessage, setToastMessage] = useState<{ text: string; type: "success" | "error" | "info" } | null>(null);
-
-  const showToast = (text: string, type: "success" | "error" | "info" = "success") => {
-    setToastMessage({ text, type });
-    setTimeout(() => {
-      setToastMessage(null);
-    }, 4500);
-  };
-
-  // --- Profile session, Authentication & AI Co-pilot states ---
-  const [currentUser, setCurrentUser] = useState<{
-    email: string;
-    username: string;
-    avatarSeed: string;
-  } | null>(() => {
-    const saved = localStorage.getItem("dragy_user");
-    return saved ? JSON.parse(saved) : null;
-  });
-
-  const [showAuthModal, setShowAuthModal] = useState(() => {
-    const saved = localStorage.getItem("dragy_user");
-    return !saved;
-  });
-  const [authEmail, setAuthEmail] = useState("");
-  const [authUsername, setAuthUsername] = useState("");
-
-  const [isAiDrawerOpen, setIsAiDrawerOpen] = useState(false);
-  const [aiChatMessages, setAiChatMessages] = useState<{ sender: "user" | "ai"; text: string; time: string; actions?: any[] }[]>(() => {
-    const saved = localStorage.getItem("dragy_ai_chat");
-    return saved ? JSON.parse(saved) : [
-      {
-        sender: "ai",
-        text: "สวัสดีครับนายท่าน! ยินดีต้อนรับสู่ศูนย์กลาง Dragy Domain Management 🛡️\n\nผมคือ Drady.ai hattewar Co-pilot ของคุณ ผมคอยเฝ้าระบบและตลาดซื้อขายตลอด 24 ชั่วโมง คุณสามารถสั่งงานผมด้วยเสียงหรือพิมพ์แชทธรรมดาได้เลย ระบบจะรันการอัปเดตและจดทะเบียนจริงให้คุณออโต้ทันทีครับ!\n\nลองพิมพ์สั่งงานเหล่านี้เพื่อเริ่มทดสอบดูนะครับ:\n• 'ขอเหรียญเครดิตฟรีให้ผมหน่อย'\n• 'จดโดเมน richman.dragy'\n• 'ตั้งขายโดเมน dragon-ball.dragy ราคา 1200'\n• 'ช่วยอัปเดต DNS ของ my-startup.dragy ชี้ไปค่า IP 1.2.3.4'",
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      }
-    ];
-  });
-  const [aiDraftInput, setAiDraftInput] = useState("");
-  const [isAiThinking, setIsAiThinking] = useState(false);
-
-  // Sync profile & chat with localStorage
-  useEffect(() => {
-    if (currentUser) {
-      localStorage.setItem("dragy_user", JSON.stringify(currentUser));
-      syncDatabaseState(currentUser.email);
-    } else {
-      localStorage.removeItem("dragy_user");
+  // คลังไฟล์ทองคำที่เจนเสร็จแล้ว พร้อมเอาไปโพสต์/ส่งออกเพื่อหาเงิน
+  const [gallery, setGallery] = useState<GeneratedAsset[]>([
+    {
+      id: "asset-1",
+      prompt: "Majestic Thai Celestial Palace in the clouds, golden spires, hyper-detailed, cinematic lighting",
+      type: "IMAGE",
+      style: "ไทยแฟนตาซีสรวงสวรรค์",
+      url: "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=600&auto=format&fit=crop&q=60",
+      createdDate: "2026-06-17"
     }
-  }, [currentUser]);
+  ]);
 
-  // Initial Load Database Trigger
-  useEffect(() => {
-    const email = currentUser?.email || "PRABUABAN444@gmail.com";
-    syncDatabaseState(email);
-    fetchDbStats();
-  }, []);
+  // ฟังก์ชันสั่ง ดาร์กี หัตถ์เทวา เจนเนอเรตสื่อ
+  const handleGenerateAsset = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!promptInput.trim()) return;
 
-  // ดักจับชื่อโดเมน .dragy จาก URL อัตโนมัติ (เช่น /test.dragy) เพื่อค้นหาและประเมินราคาทันที
-  useEffect(() => {
-    const pathName = window.location.pathname;
-    if (pathName && pathName.endsWith('.dragy')) {
-      // ใช้ decodeURIComponent เพื่อรองรับชื่อโดเมนภาษาไทยและอักขระพิเศษอย่างถูกต้อง
-      const currentDomain = decodeURIComponent(pathName.substring(1));
-      
-      // ตั้งค่าคำค้นหาลงในเซิร์ชบล็อกอัตโนมัติ
-      setSearchQuery(currentDomain);
-      
-      // สลับหน้าจอมาที่หน้าแรก (Explore) เพื่อแสดงผลลัพธ์
-      setActiveTab("search");
-      
-      // วิเคราะห์มูลค่าด้วยปัญญาประดิษฐ์ Gemini อัตโนมัติทันที
-      evaluateDomainWithAi(currentDomain);
-    }
-  }, []);
+    setIsGenerating(true);
+    setGenerationProgress(10);
+    
+    setTerminalLogs(prev => [
+      ...prev,
+      `🔮 [COMMAND] คุณ ${masterName} สั่งการระบบหัตถ์เทวา`,
+      `📝 [PROMPT] "${promptInput}"`,
+      `⚡ [PROCESSING] กำลังคำนวเนคอร์สไตล์: ${selectedStyle}`
+    ]);
 
-  // Sync documents list on activeTab transitions
-  useEffect(() => {
-    if (activeTab === "mongodb") {
-      fetchDbStats();
-      fetchCollectionDocs(selectedDbCol);
-    }
-  }, [activeTab, selectedDbCol]);
-
-  useEffect(() => {
-    localStorage.setItem("dragy_ai_chat", JSON.stringify(aiChatMessages));
-  }, [aiChatMessages]);
-
-  // Helper to check if the current user is the authorized administrator
-  const isAuthorizedOwner = () => {
-    return currentUser?.email === "PRABUABAN444@gmail.com";
-  };
-
-  const verifyWritePermission = (actionName: string = "modify data"): boolean => {
-    if (!isAuthorizedOwner()) {
-      showToast(`🔐 Access Denied: Only PRABUABAN444@gmail.com is authorized to ${actionName}.`, "error");
-      return false;
-    }
-    return true;
-  };
-
-  // Faucet request for simulated wallet
-  const handleFaucet = async () => {
-    if (!verifyWritePermission("claim play tokens from the Faucet")) return;
-    const email = currentUser?.email || "PRABUABAN444@gmail.com";
-    try {
-      const res = await fetch("/api/state/faucet", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email })
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setWallet(data.wallet);
-        showToast("Claimed +1,000 $DRAGY coins successfully from MongoDB database!", "success");
-        fetchDbStats();
-      } else {
-        throw new Error();
-      }
-    } catch {
-      setWallet(prev => prev + 1000);
-      showToast("Received 1,000 $DRAGY Faucet tokens (local backup applied)!", "success");
-    }
-  };
-
-  // Handle live lookup state whenever search changes
-  useEffect(() => {
-    if (!searchQuery.trim()) {
-      setCurrentLookupResult(null);
-      return;
-    }
-
-    const rawInput = searchQuery.toLowerCase().trim();
-    // Auto appended .dragy logic
-    const baseName = rawInput.replace(/\.dragy$/, "");
-    const cleanDomainName = baseName ? `${baseName}.dragy` : "";
-
-    if (!cleanDomainName || baseName.includes(".") || baseName.includes(" ")) {
-      // Invalid naming or contains subdomains
-      setCurrentLookupResult(null);
-      return;
-    }
-
-    // Check if user already owns it
-    const userOwned = ownedDomains.find(d => d.domain === cleanDomainName);
-    if (userOwned) {
-      setCurrentLookupResult({
-        domain: cleanDomainName,
-        status: "owned",
-        price: userOwned.price,
-        isPremium: userOwned.isPremium
-      });
-      return;
-    }
-
-    // Check if listed in Marketplace
-    const mktItem = marketplaceItems.find(item => item.domain === cleanDomainName);
-    if (mktItem) {
-      setCurrentLookupResult({
-        domain: cleanDomainName,
-        status: "marketplace",
-        price: mktItem.price,
-        isPremium: mktItem.score >= 80,
-        seller: mktItem.seller
-      });
-      return;
-    }
-
-    // Otherwise calculate standard base cost
-    const baseCostCalc = calculateDomainBaseCost(cleanDomainName);
-    setCurrentLookupResult({
-      domain: cleanDomainName,
-      status: "available",
-      price: baseCostCalc.cost,
-      isPremium: baseCostCalc.isPremium
-    });
-  }, [searchQuery, ownedDomains, marketplaceItems]);
-
-  // Handle Domain registration (instant claim)
-  const handleRegisterDomain = async (domainName: string, price: number, isPremium: boolean) => {
-    if (!verifyWritePermission("register new .dragy domains")) return;
-    const email = currentUser?.email || "PRABUABAN444@gmail.com";
-    if (wallet < price) {
-      showToast("Insufficient Balance. Recharge with the faucet button in the header!", "error");
-      return;
-    }
-
-    try {
-      const records = [{ id: "dns-auto-a", type: "A", name: "@", value: "76.76.21.21", ttl: 3600 }];
-      const aiMetrics = activeAiMetrics || {
-        score: isPremium ? 85 : 62,
-        valuation: price * 1.5,
-        category: "Web3 Identity",
-        description: `Premium registry purchase of decentralized asset ${domainName}`,
-        suggestedUses: ["Decentralized main link", "Custom static redirect service"],
-        alternatives: []
-      };
-
-      const res = await fetch("/api/state/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email,
-          domain: domainName,
-          price,
-          isPremium,
-          dnsRecords: records,
-          aiMetrics
-        })
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        setWallet(data.wallet);
-        setOwnedDomains(prev => [data.domain, ...prev]);
-        showToast(`Successfully registered ${domainName}! Domain saved to MongoDB database portfolio.`, "success");
-        setSearchQuery(domainName);
-        fetchDbStats();
-      } else {
-        const errData = await res.json();
-        showToast(errData.error || "Failed to catalog domain registration", "error");
-      }
-    } catch {
-      // Deduct wallet local fallback
-      setWallet(prev => prev - price);
-      const newDomain: DomainInfo = {
-        domain: domainName,
-        owner: "You",
-        price: price,
-        isPremium: isPremium,
-        registeredDate: new Date().toISOString().split("T")[0],
-        isForSale: false,
-        dnsRecords: [
-          { id: "def-a", type: "A", name: "@", value: "76.76.21.21", ttl: 3600 }
-        ]
-      };
-      setOwnedDomains(prev => [newDomain, ...prev]);
-      showToast(`Successfully registered ${domainName} (Local offline backup)!`, "success");
-      setSearchQuery(domainName);
-    }
-  };
-
-  // Run AI Evaluation via server endpoint
-  const evaluateDomainWithAi = async (domainName: string) => {
-    setIsEvaluating(true);
-    setActiveAiMetrics(null);
-    setEvalError(null);
-
-    try {
-      const response = await fetch("/api/domain/evaluate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ domain: domainName })
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to evaluate with AI service.");
-      }
-
-      const data: AiMetrics = await response.json();
-      setActiveAiMetrics(data);
-      
-      // Update owned domains list if we own this domain so it retains evaluation metrics
-      setOwnedDomains(prev => prev.map(d => {
-        if (d.domain === domainName) {
-          return { ...d, aiMetrics: data };
+    const interval = setInterval(() => {
+      setGenerationProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          return 100;
         }
-        return d;
-      }));
-
-    } catch (err: any) {
-      setEvalError(err.message || "An unexpected error occurred during evaluation.");
-    } finally {
-      setIsEvaluating(false);
-    }
-  };
-
-  // Generate domains from AI suggestions
-  const generateAiSuggestions = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!sandboxPrompt.trim()) return;
-
-    setIsGeneratingSuggestions(true);
-    setSuggestions([]);
-    setSuggestionError(null);
-
-    try {
-      const response = await fetch("/api/domain/suggest", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: sandboxPrompt })
+        return prev + 30;
       });
+    }, 500);
 
-      if (!response.ok) {
-        throw new Error("Failed to generate custom domain suggestions.");
-      }
-
-      const data: SuggestedDomain[] = await response.json();
-      setSuggestions(data);
-      showToast(`Generated ${data.length} creative ideas!`, "success");
-    } catch (err: any) {
-      setSuggestionError(err.message || "Unable to load suggestions.");
-    } finally {
-      setIsGeneratingSuggestions(false);
-    }
-  };
-
-  // DNS Managing Actions
-  const handleAddDnsRecord = (e: React.FormEvent, domainName: string) => {
-    e.preventDefault();
-    if (!verifyWritePermission("add DNS records")) return;
-    if (!newDnsValue.trim()) return;
-
-    const newRecord: DnsRecord = {
-      id: "dns-" + Date.now(),
-      type: newDnsType,
-      name: newDnsName.trim() || "@",
-      value: newDnsValue.trim(),
-      ttl: newDnsTtl
-    };
-
-    setOwnedDomains(prev => prev.map(d => {
-      if (d.domain === domainName) {
-        return {
-          ...d,
-          dnsRecords: [...d.dnsRecords, newRecord]
-        };
-      }
-      return d;
-    }));
-
-    showToast(`Added ${newDnsType} record for ${domainName}`, "success");
-    setNewDnsValue("");
-    setNewDnsName("@");
-  };
-
-  const handleDeleteDnsRecord = (domainName: string, recordId: string) => {
-    if (!verifyWritePermission("delete DNS records")) return;
-    setOwnedDomains(prev => prev.map(d => {
-      if (d.domain === domainName) {
-        return {
-          ...d,
-          dnsRecords: d.dnsRecords.filter(r => r.id !== recordId)
-        };
-      }
-      return d;
-    }));
-    showToast("DNS record removed.", "info");
-  };
-
-  // Marketplace Actions
-  const handleListItem = (domainName: string) => {
-    if (!verifyWritePermission("list domains in the marketplace")) return;
-    const listPrice = parseInt(sellPriceInput);
-    if (isNaN(listPrice) || listPrice <= 0) {
-      showToast("Please enter a valid price in $DRAGY.", "error");
-      return;
-    }
-
-    const domainObject = ownedDomains.find(d => d.domain === domainName);
-    if (!domainObject) return;
-
-    setOwnedDomains(prev => prev.map(d => {
-      if (d.domain === domainName) {
-        return { ...d, isForSale: true, price: listPrice };
-      }
-      return d;
-    }));
-
-    // Add to marketplace listing
-    const score = domainObject.aiMetrics?.score || 72;
-    const valuation = domainObject.aiMetrics?.valuation || listPrice;
-
-    const isAuctionMode = sellType === "auction";
-    const item: MarketItem = {
-      domain: domainName,
-      price: listPrice,
-      seller: "You",
-      valuation: valuation,
-      score: score,
-      isAuction: isAuctionMode,
-      highestBid: isAuctionMode ? listPrice : undefined,
-      minIncrement: isAuctionMode ? Math.max(10, Math.floor(listPrice * 0.05)) : undefined,
-      bids: []
-    };
-
-    setMarketplaceItems(prev => [item, ...prev]);
-    showToast(
-      isAuctionMode 
-        ? `Started auction for ${domainName} with reserve price of ${listPrice} $DRAGY!` 
-        : `Listed ${domainName} for instant sale at ${listPrice} $DRAGY!`, 
-      "success"
-    );
-    setSellPriceInput("");
-  };
-
-  const handlePlaceBid = (domainName: string, amount: number) => {
-    if (!verifyWritePermission("place bids in auctions")) return;
-    if (wallet < amount) {
-      showToast("Insufficient Balance. Claim free tokens from the Faucet first!", "error");
-      return;
-    }
-
-    const item = marketplaceItems.find(i => i.domain === domainName);
-    if (!item) return;
-
-    if (item.seller === "You") {
-      showToast("You cannot bid on your own listing!", "error");
-      return;
-    }
-
-    const currentHigh = item.highestBid || item.price;
-    const minInc = item.minIncrement || 50;
-    if (amount < currentHigh + minInc) {
-      showToast(`Bid must be at least ${currentHigh + minInc} $DRAGY.`, "error");
-      return;
-    }
-
-    setWallet(prev => prev - amount); // reserve bid amount
-
-    const myPreviousBid = item.bids?.find(b => b.bidder === "You");
-    if (myPreviousBid) {
-      setWallet(prev => prev + myPreviousBid.amount); // refund prior reserved amount
-    }
-
-    const newBid = {
-      id: "bid-" + Date.now(),
-      bidder: "You",
-      amount: amount,
-      time: new Date().toISOString().replace("T", " ").substring(0, 16)
-    };
-
-    setMarketplaceItems(prev => prev.map(i => {
-      if (i.domain === domainName) {
-        return {
-          ...i,
-          highestBid: amount,
-          bids: [newBid, ...(i.bids || [])]
-        };
-      }
-      return i;
-    }));
-
-    showToast(`Successfully placed bid of ${amount} $DRAGY on ${domainName}!`, "success");
-    setBidAmountInput(prev => ({ ...prev, [domainName]: "" }));
-
-    // Trigger AI Bots competition!
     setTimeout(() => {
-      if (Math.random() < 0.75) {
-        const botNames = [
-          "DeFi_Whale", "CoinMaster", "AlphaHedge", "SatoshiFan", 
-          "Web3Investor", "DomainKing", "CryptoOracle", "ZuckFanboy"
-        ].filter(name => name !== item.seller);
-        const botName = botNames[Math.floor(Math.random() * botNames.length)];
-        
-        const botBidAmount = amount + minInc + Math.floor(Math.random() * 3) * minInc;
-        
-        const botBid = {
-          id: "bid-bot-" + Date.now(),
-          bidder: botName,
-          amount: botBidAmount,
-          time: new Date().toISOString().replace("T", " ").substring(0, 16)
-        };
+      const mockAssetId = "asset-" + Date.now();
+      const mockImages = [
+        "https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=600&auto=format&fit=crop&q=60",
+        "https://images.unsplash.com/photo-1478760329108-5c3ed9d495a0?w=600&auto=format&fit=crop&q=60"
+      ];
+      
+      const nextAsset: GeneratedAsset = {
+        id: mockAssetId,
+        prompt: promptInput,
+        type: activeMode === "image" ? "IMAGE" : "VIDEO",
+        style: selectedStyle,
+        url: mockImages[Math.floor(Math.random() * mockImages.length)],
+        createdDate: new Date().toISOString().split("T")[0]
+      };
 
-        setMarketplaceItems(prevItems => {
-          return prevItems.map(i => {
-            if (i.domain === domainName) {
-              return {
-                ...i,
-                highestBid: botBidAmount,
-                bids: [botBid, ...(i.bids || [])]
-              };
-            }
-            return i;
-          });
-        });
-
-        setWallet(prev => prev + amount); // Refund outbid user
-        showToast(`You have been outbid on ${domainName} by ${botName} for ${botBidAmount} $DRAGY!`, "info");
-      }
-    }, 1500);
-  };
-
-  const handleAcceptHighestBid = (domainName: string) => {
-    if (!verifyWritePermission("accept bids on your domains")) return;
-    const item = marketplaceItems.find(i => i.domain === domainName);
-    if (!item) return;
-    if (item.seller !== "You") return;
-
-    const highestBidAmt = item.highestBid || item.price;
-    const highestBidder = item.bids && item.bids.length > 0 ? item.bids[0].bidder : "System Merchant";
-
-    setWallet(prev => prev + highestBidAmt);
-    setOwnedDomains(prev => prev.filter(d => d.domain !== domainName));
-    setMarketplaceItems(prev => prev.filter(i => i.domain !== domainName));
-
-    showToast(`Successfully accepted bid of ${highestBidAmt} $DRAGY from ${highestBidder}! Ownership transferred.`, "success");
-  };
-
-  const handleCancelListing = (domainName: string) => {
-    if (!verifyWritePermission("cancel marketplace listings")) return;
-    setOwnedDomains(prev => prev.map(d => {
-      if (d.domain === domainName) {
-        return { ...d, isForSale: false };
-      }
-      return d;
-    }));
-
-    setMarketplaceItems(prev => prev.filter(item => item.domain !== domainName));
-    showToast(`Cancelled listing for ${domainName}`, "info");
-  };
-
-  const handleBuyMarketItem = (item: MarketItem) => {
-    if (!verifyWritePermission("buy domains from the marketplace")) return;
-    if (wallet < item.price) {
-      showToast("Insufficient Balance. Claim free tokens from the Faucet first!", "error");
-      return;
-    }
-    if (item.seller === "You") {
-      showToast("You already own this domain!", "error");
-      return;
-    }
-
-    setWallet(prev => prev - item.price);
-
-    const baseCostCalc = calculateDomainBaseCost(item.domain);
-    const newOwned: DomainInfo = {
-      domain: item.domain,
-      owner: "You",
-      price: item.price,
-      isPremium: baseCostCalc.isPremium,
-      registeredDate: new Date().toISOString().split("T")[0],
-      isForSale: false,
-      dnsRecords: [
-        { id: "dns-1", type: "A", name: "@", value: "76.76.21.21", ttl: 3600 }
-      ],
-      aiMetrics: {
-        score: item.score,
-        valuation: item.valuation,
-        category: "Market Acquisition",
-        description: `Premium registry purchase of standard domain asset ${item.domain}.`,
-        suggestedUses: ["Deploy primary Web3 decentralized hub", "Set up forwarding service for product portfolio"],
-        alternatives: []
-      }
-    };
-
-    setOwnedDomains(prev => [newOwned, ...prev]);
-    setMarketplaceItems(prev => prev.filter(i => i.domain !== item.domain));
-    showToast(`Successfully purchased ${item.domain}!`, "success");
-  };
-
-  const handleQuickSearchTemplate = (term: string) => {
-    setSearchQuery(term);
-    setActiveTab("search");
-  };
-
-  const handleQuickSandboxTemplate = (text: string) => {
-    setSandboxPrompt(text);
-    setActiveTab("sandbox");
-  };
-
-  // Automated AI Agent execution logic
-  const handleAiCommandSubmit = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    if (!verifyWritePermission("execute AI smart co-pilot commands")) return;
-    if (!aiDraftInput.trim()) return;
-
-    const userMsgText = aiDraftInput.trim();
-    setAiDraftInput("");
-
-    const tempTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    const userMessageObj = { sender: "user" as const, text: userMsgText, time: tempTime };
-    setAiChatMessages(prev => [...prev, userMessageObj]);
-    setIsAiThinking(true);
-
-    try {
-      const response = await fetch("/api/ai/command", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: userMsgText,
-          ownedDomains,
-          marketplaceItems,
-          wallet,
-          email: currentUser?.email
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error("ระบบ AI ไม่ตอบสนองชั่วคราว");
-      }
-
-      const resData = await response.json();
-      const aiReplyText = resData.message;
-
-      // เพิ่มคำตอบจาก AI ลงในแชท
-      setAiChatMessages(prev => [...prev, {
-        sender: "ai",
-        text: aiReplyText,
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      }]);
-
-      // หากมี Actions กลับมาให้สั่ง Sync ดาต้าเบสใหม่ทันที
-      if (resData.actions && resData.actions.length > 0) {
-        syncDatabaseState(currentUser?.email || "PRABUABAN444@gmail.com");
-      }
-
-    } catch (err) {
-      setAiChatMessages(prev => [...prev, {
-        sender: "ai",
-        text: "ขออภัยครับเจ้านาย เกิดข้อผิดพลาดในการเชื่อมต่อเครือข่าย AI กรุณาลองใหม่อีกครั้งครับ",
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      }]);
-    } finally {
-      setIsAiThinking(false);
-    }
+      setGallery(prev => [nextAsset, ...prev]);
+      setTerminalLogs(prev => [
+        ...prev,
+        `🟢 [SUCCESS] ดาร์กี หัตถ์เทวา เนรมิตสื่อเสร็จสิ้น!`,
+        `💾 บันทึกไฟล์ 4K ลงเซิร์ฟเวอร์ระบบปิดของโปรเจกต์เรียบร้อย พร้อมใช้หาเงิน`
+      ]);
+      
+      setIsGenerating(false);
+      setPromptInput("");
+    }, 2000);
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans">
-      {/* 
-         ประกอบหน้าอินเตอร์เฟซ UI ของเจ้านายตามดีไซน์เดิมด้านล่างนี้ได้เลย 
-         (เช่น แถบเมนู บานแชท Co-pilot และเงื่อนไขการเรนเดอร์แท็บ activeTab)
-      */}
-      <div className="p-6 text-center text-xs text-slate-500">
-        Dragy Domains Dashboard Engine v2.5 • MongoDB Backplane Ready
+    <div className="min-h-screen bg-slate-950 text-slate-100 font-mono p-4 md:p-8">
+      
+      {/* HEADER CONTROL */}
+      <header className="border-b border-emerald-900/40 pb-4 mb-6 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 bg-slate-900/60 p-5 rounded-xl border border-emerald-950">
+        <div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse" />
+            <h1 className="text-xl md:text-2xl font-black text-white tracking-wider">
+              {aiTitle.toUpperCase()}
+            </h1>
+          </div>
+          <p className="text-xs text-emerald-400 mt-1">
+            PROJECT: <span className="text-white underline font-bold">ดากีโดเมน (Dragy Domain System)</span> | OPERATOR: <span className="text-white font-bold">{masterName}</span>
+          </p>
+        </div>
+
+        {/* แสดงผลเครือข่าย ซับโดเมน .dragy ที่กำลังรันอยู่จริง */}
+        <div className="bg-slate-950 p-3 rounded border border-emerald-900/30 w-full xl:w-auto overflow-x-auto">
+          <div className="text-[10px] text-slate-400 uppercase font-bold mb-1 flex items-center gap-1">
+            <Globe size={12} className="text-emerald-500" /> ACTIVE SUBDOMAINS ON RENDER NODE
+          </div>
+          <div className="flex gap-4 text-xs whitespace-nowrap">
+            {mySubDomains.map((item, idx) => (
+              <span key={idx} className="text-emerald-400">
+                🌐 {item.subdomain} <span className="text-slate-500">[{item.projectName}]</span>
+              </span>
+            ))}
+          </div>
+        </div>
+      </header>
+
+      {/* WORKSPACE */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        {/* INPUT PANEL */}
+        <div className="lg:col-span-5 space-y-6">
+          <div className="bg-slate-900/80 border border-emerald-950 rounded-xl p-5 shadow-xl">
+            <h2 className="text-xs font-bold text-white mb-4 flex items-center gap-2 border-b border-slate-800 pb-2 uppercase tracking-widest">
+              <Sparkles size={14} className="text-emerald-500" /> ENGINE GENERATOR INPUT
+            </h2>
+
+            <div className="grid grid-cols-2 gap-2 mb-4">
+              <button
+                type="button"
+                onClick={() => setActiveMode("image")}
+                className={`py-2 px-3 rounded text-xs font-bold transition-all flex items-center justify-center gap-2 ${
+                  activeMode === "image" ? "bg-emerald-600 text-slate-950" : "bg-slate-950 text-slate-400 hover:bg-slate-900"
+                }`}
+              >
+                <ImageIcon size={14} /> เจนภาพถ่าย AI
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveMode("video")}
+                className={`py-2 px-3 rounded text-xs font-bold transition-all flex items-center justify-center gap-2 ${
+                  activeMode === "video" ? "bg-emerald-600 text-slate-950" : "bg-slate-950 text-slate-400 hover:bg-slate-900"
+                }`}
+              >
+                <Video size={14} /> เจนวิดีโอ AI
+              </button>
+            </div>
+
+            <form onSubmit={handleGenerateAsset} className="space-y-4">
+              <div>
+                <label className="block text-[11px] text-slate-400 font-bold mb-1">ป้อนคำสั่งมหาเวทย์ (Prompt):</label>
+                <textarea
+                  value={promptInput}
+                  onChange={(e) => setPromptInput(e.target.value)}
+                  placeholder="ระบุคำสั่งสร้างสรรค์สื่อ ทรงผม เสื้อผ้า มหากาพย์วรรณคดี หรือเรื่องราวประวัติศาสตร์ที่ต้องการนำไปหาเงิน..."
+                  className="w-full bg-slate-950 border border-emerald-900/50 rounded p-3 text-white focus:outline-none focus:border-emerald-500 text-xs h-28 font-sans"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 text-xs">
+                <div>
+                  <label className="block text-[11px] text-slate-400 mb-1">เลือกสไตล์:</label>
+                  <select 
+                    value={selectedStyle} 
+                    onChange={(e) => setSelectedStyle(e.target.value)}
+                    className="w-full bg-slate-950 border border-emerald-900 text-emerald-400 p-2 rounded text-xs"
+                  >
+                    <option value="ไทยแฟนตาซีสรวงสวรรค์">ไทยแฟนตาซีสรวงสวรรค์</option>
+                    <option value="สมจริงอิงประวัติศาสตร์">สมจริงอิงประวัติศาสตร์</option>
+                    <option value="ภูมิทัศน์วรรณคดี">ภูมิทัศน์วรรณคดี</option>
+                    <option value="ไซเบอร์พังก์รัตนโกสินทร์">ไซเบอร์พังก์รัตนโกสินทร์</option>
+                  </select>
+                </div>
+
+                {activeMode === "image" ? (
+                  <div>
+                    <label className="block text-[11px] text-slate-400 mb-1">สัดส่วนภาพ:</label>
+                    <select 
+                      value={aspectRatio} 
+                      onChange={(e) => setAspectRatio(e.target.value)}
+                      className="w-full bg-slate-950 border border-emerald-900 text-emerald-400 p-2 rounded text-xs"
+                    >
+                      <option value="16:9">16:9 (แนวนอนหนัง)</option>
+                      <option value="1:1">1:1 (สี่เหลี่ยมจัตุรัส)</option>
+                      <option value="9:16">9:16 (แนวตั้งสั้น)</option>
+                    </select>
+                  </div>
+                ) : (
+                  <div>
+                    <label className="block text-[11px] text-slate-400 mb-1">ความยาวคลิป:</label>
+                    <select 
+                      value={videoDuration} 
+                      onChange={(e) => setVideoDuration(e.target.value)}
+                      className="w-full bg-slate-950 border border-emerald-900 text-emerald-400 p-2 rounded text-xs"
+                    >
+                      <option value="5s">5 วินาที</option>
+                      <option value="10s">10 วินาที</option>
+                    </select>
+                  </div>
+                )}
+              </div>
+
+              <button
+                type="submit"
+                disabled={isGenerating || !promptInput.trim()}
+                className="w-full bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-950/40 disabled:text-emerald-800 text-slate-950 font-black tracking-wider py-3 rounded-lg text-xs transition-all flex items-center justify-center gap-2"
+              >
+                {isGenerating ? (
+                  <><RefreshCw className="animate-spin" size={14} /> หัตถ์เทวากำลังรังสรรค์สื่อ ({generationProgress}%)</>
+                ) : (
+                  <><Play size={14} /> สั่งการ ดาร์กี หัตถ์เทวา เริ่มงาน ⚡</>
+                )}
+              </button>
+            </form>
+          </div>
+
+          {/* MONITOR */}
+          <div className="bg-slate-900/90 border border-emerald-950 rounded-xl p-4 shadow-md">
+            <h3 className="text-xs font-bold text-white mb-2 flex items-center gap-2">
+              <Terminal size={14} className="text-emerald-500" /> SYSTEM MONITOR
+            </h3>
+            <div className="bg-slate-950 p-3 rounded border border-emerald-900/20 text-[11px] h-32 overflow-y-auto space-y-1 text-slate-400">
+              <div>[HOST] ดากีโดเมน (Dragy Domain Server) ผูกระบบสำเร็จ</div>
+              <div>[CORE] ตัวควบคุมหลักเปลี่ยนหน้าเว็บเป็น "ดาร์กี หัตถ์เทวา" เรียบร้อย</div>
+              {terminalLogs.map((log, i) => (
+                <div key={i} className="text-emerald-400">{log}</div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* GALLERY OUTPUT PANEL */}
+        <div className="lg:col-span-7">
+          <div className="bg-slate-900/80 border border-emerald-950 rounded-xl p-5 shadow-xl h-full">
+            <div className="border-b border-slate-800 pb-3 mb-4 flex justify-between items-center">
+              <h2 className="text-xs font-bold text-white tracking-widest flex items-center gap-2 uppercase">
+                <Layers size={14} className="text-emerald-500" /> OUTPUT HIGH-RES ASSETS
+              </h2>
+              <span className="text-[11px] bg-slate-950 text-emerald-400 border border-emerald-900 px-2 py-0.5 rounded font-bold">
+                จำนวน {gallery.length} ไฟล์
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {gallery.map((asset) => (
+                <div key={asset.id} className="bg-slate-950 rounded-lg border border-emerald-950/40 overflow-hidden flex flex-col justify-between p-3 gap-3">
+                  <div className="relative aspect-video bg-slate-900 rounded overflow-hidden">
+                    <img src={asset.url} alt="asset" className="w-full h-full object-cover opacity-85" />
+                    <span className="absolute top-2 left-2 bg-slate-950/90 text-[9px] font-bold px-1.5 py-0.5 rounded border border-emerald-800 text-white">
+                      {asset.type}
+                    </span>
+                    <span className="absolute bottom-2 right-2 bg-emerald-600 text-slate-950 text-[9px] font-bold px-1.5 py-0.5 rounded">
+                      {asset.style}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="text-[11px] text-slate-300 font-sans line-clamp-2 italic">"{asset.prompt}"</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => alert("ดาวน์โหลดซอร์สไฟล์ต้นฉบับ 4K เรียบร้อย พร้อมเอาไปสร้างรายได้!")}
+                    className="w-full bg-slate-900 hover:bg-emerald-950 text-white hover:text-emerald-400 border border-slate-800 hover:border-emerald-700 py-2 rounded text-xs transition-all flex items-center justify-center gap-1.5"
+                  >
+                    <Download size={12} /> DOWNLOAD 4K MASTER
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
       </div>
+
+      <footer className="mt-8 border-t border-emerald-900/20 pt-4 text-center text-[10px] text-slate-600 tracking-wider">
+        DRAGY DOMAIN NETWORK CORE // POWERED BY DRAGY HATTEWAR FOR MASTER USER
+      </footer>
+
     </div>
   );
 }

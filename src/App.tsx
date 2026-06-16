@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   Sparkles, 
   Image as ImageIcon, 
@@ -14,8 +14,7 @@ import {
   Download, 
   Play, 
   Layers, 
-  RefreshCw,
-  ArrowRight
+  RefreshCw
 } from "lucide-react";
 
 interface DeployedSubDomain {
@@ -49,14 +48,13 @@ export default function App() {
   const [generationProgress, setGenerationProgress] = useState(0);
   const [terminalLogs, setTerminalLogs] = useState<string[]>([]);
 
-  // รายการซับโดเมนภายใต้ระบบ .dragy ที่เจ้านายสั่งรันโปรเจกต์ไว้ใช้งานจริง
+  // รายการซับโดเมน .dragy
   const [mySubDomains] = useState<DeployedSubDomain[]>([
     { subdomain: "www.ai.dragy", projectName: "ศูนย์บัญชาการหัตถ์เทวา", status: "ONLINE", type: "AI Engine" },
     { subdomain: "www.phuttha-tharani.dragy", projectName: "โปรเจกต์พุทธธารานี", status: "ONLINE", type: "Folklore Video" },
     { subdomain: "www.tribute-m.dragy", projectName: "อนุสรณ์อาลัยเพื่อน M", status: "ONLINE", type: "Memorial Archive" }
   ]);
 
-  // คลังไฟล์ทองคำที่เจนเสร็จแล้ว พร้อมเอาไปโพสต์/ส่งออกเพื่อหาเงิน
   const [gallery, setGallery] = useState<GeneratedAsset[]>([
     {
       id: "asset-1",
@@ -68,7 +66,6 @@ export default function App() {
     }
   ]);
 
-  // ฟังก์ชันสั่ง ดาร์กี หัตถ์เทวา เจนเนอเรตสื่อ
   const handleGenerateAsset = (e: React.FormEvent) => {
     e.preventDefault();
     if (!promptInput.trim()) return;
@@ -80,7 +77,7 @@ export default function App() {
       ...prev,
       `🔮 [COMMAND] คุณ ${masterName} สั่งการระบบหัตถ์เทวา`,
       `📝 [PROMPT] "${promptInput}"`,
-      `⚡ [PROCESSING] กำลังคำนวเนคอร์สไตล์: ${selectedStyle}`
+      `⚡ [PROCESSING] กำลังประมวลผลสไตล์: ${selectedStyle}`
     ]);
 
     const interval = setInterval(() => {
@@ -113,7 +110,7 @@ export default function App() {
       setTerminalLogs(prev => [
         ...prev,
         `🟢 [SUCCESS] ดาร์กี หัตถ์เทวา เนรมิตสื่อเสร็จสิ้น!`,
-        `💾 บันทึกไฟล์ 4K ลงเซิร์ฟเวอร์ระบบปิดของโปรเจกต์เรียบร้อย พร้อมใช้หาเงิน`
+        `💾 บันทึกไฟล์ 4K ลงเซิร์ฟเวอร์ระบบปิดเรียบร้อย`
       ]);
       
       setIsGenerating(false);
@@ -124,11 +121,11 @@ export default function App() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-mono p-4 md:p-8">
       
-      {/* HEADER CONTROL */}
+      {/* HEADER */}
       <header className="border-b border-emerald-900/40 pb-4 mb-6 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 bg-slate-900/60 p-5 rounded-xl border border-emerald-950">
         <div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse" />
+            <span className="w-3 h-3 bg-emerald-500 rounded-full inline-block animate-pulse" />
             <h1 className="text-xl md:text-2xl font-black text-white tracking-wider">
               {aiTitle.toUpperCase()}
             </h1>
@@ -138,7 +135,6 @@ export default function App() {
           </p>
         </div>
 
-        {/* แสดงผลเครือข่าย ซับโดเมน .dragy ที่กำลังรันอยู่จริง */}
         <div className="bg-slate-950 p-3 rounded border border-emerald-900/30 w-full xl:w-auto overflow-x-auto">
           <div className="text-[10px] text-slate-400 uppercase font-bold mb-1 flex items-center gap-1">
             <Globe size={12} className="text-emerald-500" /> ACTIVE SUBDOMAINS ON RENDER NODE
@@ -156,7 +152,7 @@ export default function App() {
       {/* WORKSPACE */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
-        {/* INPUT PANEL */}
+        {/* INPUT */}
         <div className="lg:col-span-5 space-y-6">
           <div className="bg-slate-900/80 border border-emerald-950 rounded-xl p-5 shadow-xl">
             <h2 className="text-xs font-bold text-white mb-4 flex items-center gap-2 border-b border-slate-800 pb-2 uppercase tracking-widest">
@@ -190,7 +186,7 @@ export default function App() {
                 <textarea
                   value={promptInput}
                   onChange={(e) => setPromptInput(e.target.value)}
-                  placeholder="ระบุคำสั่งสร้างสรรค์สื่อ ทรงผม เสื้อผ้า มหากาพย์วรรณคดี หรือเรื่องราวประวัติศาสตร์ที่ต้องการนำไปหาเงิน..."
+                  placeholder="ระบุคำสั่งสร้างสรรค์สื่อ ทรงผม เสื้อผ้า มหากาพย์วรรณคดี..."
                   className="w-full bg-slate-950 border border-emerald-900/50 rounded p-3 text-white focus:outline-none focus:border-emerald-500 text-xs h-28 font-sans"
                 />
               </div>
@@ -218,9 +214,9 @@ export default function App() {
                       onChange={(e) => setAspectRatio(e.target.value)}
                       className="w-full bg-slate-950 border border-emerald-900 text-emerald-400 p-2 rounded text-xs"
                     >
-                      <option value="16:9">16:9 (แนวนอนหนัง)</option>
-                      <option value="1:1">1:1 (สี่เหลี่ยมจัตุรัส)</option>
-                      <option value="9:16">9:16 (แนวตั้งสั้น)</option>
+                      <option value="16:9">16:9 (แนวนอน)</option>
+                      <option value="1:1">1:1 (จัตุรัส)</option>
+                      <option value="9:16">9:16 (แนวตั้ง)</option>
                     </select>
                   </div>
                 ) : (
@@ -252,14 +248,14 @@ export default function App() {
             </form>
           </div>
 
-          {/* MONITOR */}
+          {/* SYSTEM MONITOR */}
           <div className="bg-slate-900/90 border border-emerald-950 rounded-xl p-4 shadow-md">
             <h3 className="text-xs font-bold text-white mb-2 flex items-center gap-2">
               <Terminal size={14} className="text-emerald-500" /> SYSTEM MONITOR
             </h3>
             <div className="bg-slate-950 p-3 rounded border border-emerald-900/20 text-[11px] h-32 overflow-y-auto space-y-1 text-slate-400">
-              <div>[HOST] ดากีโดเมน (Dragy Domain Server) ผูกระบบสำเร็จ</div>
-              <div>[CORE] ตัวควบคุมหลักเปลี่ยนหน้าเว็บเป็น "ดาร์กี หัตถ์เทวา" เรียบร้อย</div>
+              <div>[HOST] ดากีโดเมน (Dragy Domain Server) ออนไลน์</div>
+              <div>[CORE] เปลี่ยนหน้าแรกเป็นระบบ "ดาร์กี หัตถ์เทวา" สมบูรณ์</div>
               {terminalLogs.map((log, i) => (
                 <div key={i} className="text-emerald-400">{log}</div>
               ))}
@@ -267,7 +263,7 @@ export default function App() {
           </div>
         </div>
 
-        {/* GALLERY OUTPUT PANEL */}
+        {/* GALLERY */}
         <div className="lg:col-span-7">
           <div className="bg-slate-900/80 border border-emerald-950 rounded-xl p-5 shadow-xl h-full">
             <div className="border-b border-slate-800 pb-3 mb-4 flex justify-between items-center">
@@ -296,7 +292,7 @@ export default function App() {
                   </div>
                   <button
                     type="button"
-                    onClick={() => alert("ดาวน์โหลดซอร์สไฟล์ต้นฉบับ 4K เรียบร้อย พร้อมเอาไปสร้างรายได้!")}
+                    onClick={() => alert("ดาวน์โหลดซอร์สไฟล์ต้นฉบับ 4K เรียบร้อย พร้มใช้ทำเงิน!")}
                     className="w-full bg-slate-900 hover:bg-emerald-950 text-white hover:text-emerald-400 border border-slate-800 hover:border-emerald-700 py-2 rounded text-xs transition-all flex items-center justify-center gap-1.5"
                   >
                     <Download size={12} /> DOWNLOAD 4K MASTER
